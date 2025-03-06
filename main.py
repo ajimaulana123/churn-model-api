@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
+import os
+import uvicorn
 
 # Load model ML yang udah kita save
 model = joblib.load("model/random_forest_churn.pkl")
@@ -63,3 +65,7 @@ def predict_churn(request: ChurnRequest):
     except Exception as e:
         return {"error": str(e)}
         raise HTTPException(status_code=400, detail=str(e))
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Ambil PORT dari Railway
+    uvicorn.run(app, host="0.0.0.0", port=port)
