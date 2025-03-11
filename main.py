@@ -1,20 +1,26 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-import joblib
 import numpy as np
 import os
 import uvicorn
+import onnxruntime as ort
 
-# Load model ML yang udah kita save
-model = joblib.load("model/random_forest_churn.pkl")
+# Load model ONNX
+onnx_model_path = "model/random_forest_churn.onnx"
+session = ort.InferenceSession(onnx_model_path)
+input_name = session.get_inputs()[0].name  # Ambil nama input dari model ONNX
 
 # Inisialisasi FastAPI
-app = FastAPI(title="Churn Prediction API", description="API buat prediksi pelanggan bakal cabut atau nggak", version="1.0")
+app = FastAPI(
+    title="Churn Prediction API",
+    description="API buat prediksi pelanggan bakal cabut atau nggak",
+    version="1.0"
+)
 
-# Struktur request yang dikirim user
+# Struktur request dari user
 class ChurnRequest(BaseModel):
     features: list = Field(
-        description="List of 19 features in order: [gender, SeniorCitizen, Partner, Dependents, tenure, PhoneService, MultipleLines, InternetService, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, StreamingTV, StreamingMovies, Contract, PaperlessBilling, PaymentMethod, MonthlyCharges, TotalCharges]",
+        description="List dari 19 fitur pelanggan",
         min_items=19,
         max_items=19
     )
@@ -26,7 +32,7 @@ class ChurnRequest(BaseModel):
             }
         }
 
-# Endpoint Home (biar keliatan kalau API-nya hidup)
+# Endpoint Home
 @app.get("/")
 def home():
     return {"message": "Welcome to Churn Prediction API 🚀"}
@@ -35,37 +41,30 @@ def home():
 @app.post("/predict")
 def predict_churn(request: ChurnRequest):
     try:
-        # Validasi jumlah features
-        if len(request.features) != 19:
-            return {
-                "error": "Input harus berisi 19 features",
-                "features_required": [
-                    "gender", "SeniorCitizen", "Partner", "Dependents", "tenure",
-                    "PhoneService", "MultipleLines", "InternetService", "OnlineSecurity",
-                    "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV",
-                    "StreamingMovies", "Contract", "PaperlessBilling", "PaymentMethod",
-                    "MonthlyCharges", "TotalCharges"
-                ],
-                "features_provided": request.features
-            }
+        # Ubah input ke format numpy array (float32)
+        input_data = np.array(request.features, dtype=np.float32).reshape(1, -1)
 
-        # Ambil data dari user
-        input_data = np.array(request.features).reshape(1, -1)
+        # Jalankan prediksi
+        output = session.run(None, {input_name: input_data})
+        print("Output model:", output)
 
-        # Prediksi churn
-        prediction = model.predict(input_data)[0]  # Hasil: 0 = Gak Churn, 1 = Churn
-        prob = model.predict_proba(input_data)[0][1]  # Probabilitas Churn
+        # Output model berbentuk: [array([0]), {0: 0.78, 1: 0.22}]
+        pred_label = int(output[0][0])  # Hasil: 0 = Gak Churn, 1 = Churn
+        probabilities = output[1]  # Probabilitas hasil prediksi
         
-        # Balikin hasil prediksi ke user
+        # Ambil probabilitas berdasarkan kelas prediksi
+        prob = probabilities[pred_label] if pred_label in probabilities else 0.0
+
+        # Format response
         return {
-            "prediction": int(prediction),
-            "probability": float(prob),
-            "status": "Churn" if prediction == 1 else "Gak Churn"
+            "prediction": pred_label,
+            "probability": round(prob, 4),  # Buat lebih rapi
+            "status": "Churn" if pred_label == 1 else "Gak Churn"
         }
     except Exception as e:
-        return {"error": str(e)}
         raise HTTPException(status_code=400, detail=str(e))
 
+# Jalankan API
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))  # Ambil PORT dari Railway
     uvicorn.run(app, host="0.0.0.0", port=port)
