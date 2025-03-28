@@ -97,20 +97,12 @@ async def track_performance(request: Request, call_next):
 def home():
     return {"message": "Churn Prediction API 🚀", "mode": "serverless" if os.getenv("RAILWAY_ENVIRONMENT") else "non-serverless"}
 
-
 @app.post("/predict/{version}")
 async def predict_with_version(
     version: str,
     request_data: ChurnRequest,
-    request: Request  # Untuk debugging
+    request: Request
 ):
-    # Debug raw request
-    try:
-        raw_body = await request.body()
-        print(f"Raw request body: {raw_body.decode()}")
-    except Exception as e:
-        print(f"Error reading body: {str(e)}")
-
     try:
         # Validasi versi model
         if version not in model_sessions:
@@ -118,37 +110,64 @@ async def predict_with_version(
             raise HTTPException(
                 status_code=404,
                 detail={
-                    "error": "Model version not found",
-                    "available_versions": available_models,
-                    "hint": f"Did you mean one of these? {available_models}"
+                    "status": "error",
+                    "error_type": "model_not_found",
+                    "message": f"Model version '{version}' is not available",
+                    "available_models": available_models,
+                    "suggestion": f"Please use one of: {', '.join(available_models)}",
+                    "request_id": str(uuid.uuid4())
                 }
             )
 
-        # Pastikan input valid
-        if not isinstance(request_data.features, list):
-            raise HTTPException(400, detail="Features must be a list")
+        # Validasi input
+        try:
+            input_array = np.array(request_data.features, dtype=np.float32).reshape(1, -1)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "status": "error",
+                    "error_type": "invalid_input",
+                    "message": "Invalid input features",
+                    "details": str(e),
+                    "expected_format": {
+                        "type": "array",
+                        "length": 19,
+                        "content": "numeric values"
+                    },
+                    "example": [0,0,1,0,45,1,0,2,0,0,0,0,0,0,1,1,2,89.85,4034.45]
+                }
+            )
 
-        # Convert dan reshape input
-        input_array = np.array(request_data.features, dtype=np.float32).reshape(1, -1)
-
-        # Lakukan prediksi
+        # Prediksi
         session_info = model_sessions[version]
         outputs = session_info["session"].run(
             None,
             {session_info["input_name"]: input_array}
         )
 
-        # Format output
         return {
+            "status": "success",
             "prediction": int(outputs[0][0]),
             "probability": float(outputs[1][0][0]) if len(outputs) > 1 else 0.5,
             "model_version": version,
-            "status": "success"
+            "request_id": str(uuid.uuid4())
         }
 
+    except HTTPException:
+        raise  # Biarkan HTTPException yang sudah dibuat tetap seperti itu
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}", exc_info=True)
-        raise HTTPException(500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "error_type": "server_error",
+                "message": "Internal server error during prediction",
+                "request_id": str(uuid.uuid4()),
+                "contact_support": "api-support@yourcompany.com"
+            }
+        )
 
 @app.get("/performance")
 def get_performance():
