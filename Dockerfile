@@ -2,15 +2,22 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
+# Install only essential system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install pip packages with exact versions
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir \
+    fastapi==0.68.1 \
+    uvicorn==0.15.0 \
+    onnxruntime==1.10.0 \
+    huggingface-hub==0.4.0 \
+    numpy==1.21.2 \
+    pydantic==1.8.2
 
 # Copy application code
 COPY . .

@@ -154,14 +154,15 @@ Werkzeug==3.0.3
 wheel==0.43.0
 wrapt==1.16.0
 
-# Core requirements
-fastapi==0.95.2
-uvicorn==0.22.0
-onnxruntime==1.13.1
-huggingface-hub==0.14.1
-numpy==1.23.5
-pydantic==1.10.7
 contourpy==1.0.7  # Changed to available version
 
 # Explicitly add compatible matplotlib version
 matplotlib==3.6.3  # This will pull compatible contourpy
+
+# Only absolutely essential packages
+fastapi==0.68.1
+uvicorn==0.15.0
+onnxruntime==1.10.0
+huggingface-hub==0.4.0
+numpy==1.21.2
+pydantic==1.8.2
