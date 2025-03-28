@@ -25,7 +25,6 @@ poetry.lock
 .idea/
 
 # ⛔ Docker & Build Files
-Dockerfile
 *.dockerignore
 __pycache__/
 dist/
