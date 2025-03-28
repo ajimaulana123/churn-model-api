@@ -17,7 +17,7 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # Gunakan salah satu format CMD di bawah ini:
-CMD uvicorn main:app --host 0.0.0.0 --port 8000  # Pilihan 1 (Shell Form)
+#CMD uvicorn main:app --host 0.0.0.0 --port 8000  # Pilihan 1 (Shell Form)
 # atau:
 # ENTRYPOINT ["uvicorn"]                         # Pilihan 2 (Exec Form)
-# CMD ["main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["main:app", "--host", "0.0.0.0", "--port", "8000"]
