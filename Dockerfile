@@ -13,11 +13,8 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy aplikasi
+# Copy semua file
 COPY . .
 
-# Gunakan salah satu format CMD di bawah ini:
-#CMD uvicorn main:app --host 0.0.0.0 --port 8000  # Pilihan 1 (Shell Form)
-# atau:
-# ENTRYPOINT ["uvicorn"]                         # Pilihan 2 (Exec Form)
-CMD ["main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Gunakan format exec yang benar
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
