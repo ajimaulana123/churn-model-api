@@ -11,6 +11,7 @@ from typing import Dict, List
 from huggingface_hub import snapshot_download
 from pathlib import Path as PathlibPath  # Untuk operasi filesystem
 import shutil
+import uuid  # Ditambahkan di bagian atas file
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
