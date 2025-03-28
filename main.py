@@ -80,23 +80,34 @@ class ChurnRequest(BaseModel):
             }
         }
 
-# Middleware untuk tracking performa
-@app.middleware("http")
+# Inisialisasi struktur data performance_metrics
+performance_metrics = {
+    "serverless": {
+        "response_times": [],
+        "instance_id": str(uuid.uuid4())  # ID unik untuk instance
+    },
+    "non_serverless": {
+        "response_times": [],
+        "instance_id": str(uuid.uuid4())  # ID unik untuk instance
+    }
+}
+
+@app.middleware("https")
 async def track_performance(request: Request, call_next):
     start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-
-    mode = "serverless" if os.getenv(
-        "RAILWAY_ENVIRONMENT") == "production" else "non_serverless"
-    performance_metrics[mode]["response_times"].append(process_time)
-
-    # Catat instance yang menangani request
-    hostname = os.getenv("HOSTNAME", "unknown")
-    performance_metrics[mode]["instance_id"] = hostname
-
+    
+    # Tentukan mode berdasarkan path atau header
+    mode = "serverless" if "serverless" in request.url.path else "non_serverless"
+    
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        raise e
+    finally:
+        process_time = time.time() - start_time
+        performance_metrics[mode]["response_times"].append(process_time)
+    
     return response
-
 
 @app.get("/")
 def home():
