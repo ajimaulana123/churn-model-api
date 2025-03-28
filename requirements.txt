@@ -14,7 +14,7 @@ Flask==3.0.3
 Flask-Cors==4.0.1
 huggingface-hub>=0.10.0
 numpy==1.21.2
-onnxruntime==1.10.0
+onnxruntime=1.21.0
 pydantic==1.8.2
 python-multipart==0.0.5
 uvicorn==0.15.0
