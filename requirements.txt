@@ -160,9 +160,11 @@ contourpy==1.0.7  # Changed to available version
 matplotlib==3.6.3  # This will pull compatible contourpy
 
 # Only absolutely essential packages
-fastapi==0.68.1
-uvicorn==0.15.0
-onnxruntime==1.10.0
 huggingface-hub==0.4.0
 numpy==1.21.2
 pydantic==1.8.2
+
+fastapi>=0.68.0
+uvicorn>=0.15.0
+onnxruntime>=1.10.0
+python-multipart>=0.0.5

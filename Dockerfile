@@ -2,8 +2,8 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install dependensi sistem
-RUN apt-get update && apt-get install -y \
+# Install dependensi sistem minimal
+RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements terlebih dahulu untuk caching
