@@ -93,7 +93,7 @@ performance_metrics = {
     }
 }
 
-@app.middleware("https")
+@app.middleware("http")
 async def track_performance(request: Request, call_next):
     start_time = time.time()
     
