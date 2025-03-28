@@ -73,7 +73,6 @@ libclang==18.1.1
 Markdown==3.6
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
-matplotlib==3.10.1
 matplotlib-inline==0.1.7
 mdurl==0.1.2
 mistune==3.1.2
@@ -163,3 +162,6 @@ huggingface-hub==0.14.1
 numpy==1.23.5
 pydantic==1.10.7
 contourpy==1.0.7  # Changed to available version
+
+# Explicitly add compatible matplotlib version
+matplotlib==3.6.3  # This will pull compatible contourpy
